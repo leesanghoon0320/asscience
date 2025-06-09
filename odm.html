@@ -1,11 +1,1328 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>ODM 화장품 설계</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K-Beauty 전문 플랫폼</title>
+    
+    <!-- PWA 설정 -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkstQmVhdXR5IOyghOusuOyEjeyatO2UkOudvO2KuCIsCiAgInNob3J0X25hbWUiOiAiSy1CZWF1dHkiLAogICJkZXNjcmlwdGlvbiI6ICLtmZTsnqXtkJPsoITsuoztlIQg7Jew6rWsIOuwsOydtOuCmOybiCDslYzrpqzplYDsvZgiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgInRoZW1lX2NvbG9yIjogIiM2NjdlZWEiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmZmZmZmYiLAogICJpY29ucyI6IFsKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlOVEV5SWlCb1pXbG5hSFE5SWpVeE1pSWdkbWxsZDBKdmVEMGlNQ0F3SURRNE15QTBPRFVPS0NJZ1ptbHNiRDBpSXpZMk4yVmxZU0lnZUcxc2JuTTlJbWgwZEhBNkx5OTNkM2N1ZHpNdWIzSm5Memt4T1RrdmMyZG5JajRLSUNBOFoyOXVaejRLSUNBZ0lEeGtaV1p6UGdvZ0lDQWdJQ0E4YzNSNWJHVStMbTVsWVhJN0xtTnNZWE56ZTJacGJHdzZJek5GUTJRNU5UZGJQVUZiSWl3aUxTZF5aWHBoWHlMaWNDOGdJRnZQQ0FzVzE5WEdNdWU=IiwKICAgICAgInNpemVzIjogImFueSIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="K-Beauty">
+    
+    <!-- 오프라인 지원을 위한 서비스 워커 등록 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                const swCode = `
+                    const CACHE_NAME = 'k-beauty-v1';
+                    const urlsToCache = ['./', 'offline.html'];
+                    
+                    self.addEventListener('install', function(event) {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(function(cache) {
+                                    return cache.addAll(urlsToCache.map(url => new Request(url, {cache: 'reload'})));
+                                })
+                        );
+                    });
+                    
+                    self.addEventListener('fetch', function(event) {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(function(response) {
+                                    return response || fetch(event.request);
+                                }
+                            )
+                        );
+                    });
+                `;
+                
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                
+                navigator.serviceWorker.register(swUrl)
+                    .then(function(registration) {
+                        console.log('ServiceWorker 등록 성공:', registration.scope);
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker 등록 실패:', err);
+                    });
+            });
+        }
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #4a5568;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .intro-box {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #ff8a65;
+        }
+
+        .step-section {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 20px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .step-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapse-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .collapse-btn.collapsed {
+            transform: rotate(180deg);
+        }
+
+        .step-content {
+            padding: 25px;
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .step-content.collapsed {
+            max-height: 0;
+            padding: 0 25px;
+        }
+
+        .category {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .category:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .category-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .category-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .option:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #4c51bf;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .option input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2);
+            pointer-events: none;
+        }
+
+        .special-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .special-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .progress-bar {
+            background: rgba(226, 232, 240, 0.8);
+            height: 8px;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        .summary-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .summary-title {
+            font-size: 1.5rem;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .selected-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .selected-category {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .selected-category h4 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .selected-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .selected-list li {
+            background: white;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-tertiary {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .install-prompt {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+
+        .install-prompt button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .floating-save {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .floating-save:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .options {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .floating-save {
+                bottom: 10px;
+                right: 10px;
+                padding: 12px 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 20px 15px;
+            }
+
+            .step-content {
+                padding: 15px;
+            }
+
+            .category {
+                padding: 15px;
+            }
+
+            .options {
+                gap: 10px;
+            }
+
+            .option {
+                padding: 10px 12px;
+            }
+        }
+
+        /* 로딩 애니메이션 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 성공 메시지 */
+        .success-message {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .success-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
-  <h1>ODM 화장품 기획 체크리스트 (샘플)</h1>
-  <p>ODM 입력 요소들을 여기에 배치합니다...</p>
+    <div class="container">
+        <div class="header">
+            <h1>K-BEAUTY 전문 플랫폼</h1>
+            <p>기초적인 내용을 체크표시하여 맞춤형 화장품 솔루션을 찾아보세요</p>
+            <div class="intro-box">
+                <p><strong>🌟 글로벌 트렌드</strong></p>
+                <p>• 미주시장: 커스터마이징 & 인플루언서 화장품 시장 확대</p>
+                <p>• 유럽시장: ESG, 컨센서스 뷰티, 웰빙, 셀프케어, 맞춤형 시장</p>
+                <p>• 전세계: 뷰티 디바이스와 기초화장품의 결합 트렌드</p>
+            </div>
+            
+            <!-- 앱 설치 프롬프트 -->
+            <div class="install-prompt" id="installPrompt">
+                <p>📱 이 앱을 홈 화면에 추가하여 더 편리하게 사용하세요!</p>
+                <button onclick="installApp()">설치하기</button>
+                <button onclick="dismissInstall()">나중에</button>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+
+        <!-- STEP 1: 기본 정보 -->
+        <div class="step-section">
+            <div class="step-header">
+                STEP 1 - 기본 제품 정보
+                <button class="collapse-btn" onclick="toggleSection(this)">▼</button>
+            </div>
+            <div class="step-content">
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">1</span>
+                        제품 종류
+                    </div>
+                    <div class="options" data-category="products">
+                        <div class="option" data-value="Skin/Body Care"><input type="checkbox"> 스킨/바디케어</div>
+                        <div class="option" data-value="Hair Care"><input type="checkbox"> 헤어케어</div>
+                        <div class="option" data-value="Color(base)"><input type="checkbox"> 색조(베이스)</div>
+                        <div class="option" data-value="Hue (point)"><input type="checkbox"> 색조(포인트)</div>
+                        <div class="option" data-value="Solid soap"><input type="checkbox"> 고체비누</div>
+                        <div class="option" data-value="perfume"><input type="checkbox"> 향수</div>
+                        <div class="option" data-value="Quasi-drugs"><input type="checkbox"> 의약외품</div>
+                        <div class="option" data-value="etc"><input type="checkbox"> 기타</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">2</span>
+                        기능성
+                    </div>
+                    <div class="options" data-category="functional">
+                        <div class="option" data-value="Whitening"><input type="checkbox"> 미백</div>
+                        <div class="option" data-value="wrinkles"><input type="checkbox"> 주름개선</div>
+                        <div class="option" data-value="UV Protection"><input type="checkbox"> 자외선차단</div>
+                        <div class="option" data-value="Acne"><input type="checkbox"> 여드름</div>
+                        <div class="option" data-value="depilation"><input type="checkbox"> 제모</div>
+                        <div class="option" data-value="Hair dye"><input type="checkbox"> 염모</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">3</span>
+                        최소주문수량 (MOQ)
+                    </div>
+                    <div class="options" data-category="moq">
+                        <div class="option" data-value="500"><input type="checkbox"> 500개</div>
+                        <div class="option" data-value="5000"><input type="checkbox"> 5,000개</div>
+                        <div class="option" data-value="10000"><input type="checkbox"> 10,000개</div>
+                        <div class="option" data-value="20000"><input type="checkbox"> 20,000개</div>
+                        <div class="option" data-value="50000"><input type="checkbox"> 50,000개</div>
+                        <div class="option" data-value="100000"><input type="checkbox"> 100,000개</div>
+                        <div class="option" data-value="OVER"><input type="checkbox"> 그 이상</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">4</span>
+                        인증 요구사항
+                    </div>
+                    <div class="options" data-category="certification">
+                        <div class="option" data-value="CGMP"><input type="checkbox"> CGMP</div>
+                        <div class="option" data-value="ISO22716"><input type="checkbox"> ISO22716</div>
+                        <div class="option" data-value="ISO9001"><input type="checkbox"> ISO9001</div>
+                        <div class="option" data-value="Vegan"><input type="checkbox"> 비건</div>
+                        <div class="option" data-value="Halal"><input type="checkbox"> 할랄</div>
+                        <div class="option" data-value="CPNP"><input type="checkbox"> CPNP</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">5</span>
+                        타겟 지역
+                    </div>
+                    <div class="options" data-category="region">
+                        <div class="option" data-value="China"><input type="checkbox"> 중국</div>
+                        <div class="option" data-value="Japan"><input type="checkbox"> 일본</div>
+                        <div class="option" data-value="South Korea"><input type="checkbox"> 한국</div>
+                        <div class="option" data-value="Taiwan"><input type="checkbox"> 대만</div>
+                        <div class="option" data-value="Indonesia"><input type="checkbox"> 인도네시아</div>
+                        <div class="option" data-value="Malaysia"><input type="checkbox"> 말레이시아</div>
+                        <div class="option" data-value="Singapore"><input type="checkbox"> 싱가포르</div>
+                        <div class="option" data-value="Thailand"><input type="checkbox"> 태국</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">6</span>
+                        타겟 연령/성별
+                    </div>
+                    <div class="options" data-category="demographic">
+                        <div class="option" data-value="teen"><input type="checkbox"> 10대</div>
+                        <div class="option" data-value="youth"><input type="checkbox"> 20-30대</div>
+                        <div class="option" data-value="Middle-aged"><input type="checkbox"> 중년</div>
+                        <div class="option" data-value="old age"><input type="checkbox"> 고령층</div>
+                        <div class="option" data-value="male"><input type="checkbox"> 남성</div>
+                        <div class="option" data-value="females"><input type="checkbox"> 여성</div>
+                        <div class="option" data-value="Public"><input type="checkbox"> 공용</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: 스킨케어 세부사항 -->
+        <div class="step-section">
+            <div class="step-header">
+                STEP 2 - 스킨케어 세부사항
+                <button class="collapse-btn" onclick="toggleSection(this)">▼</button>
+            </div>
+            <div class="step-content">
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">1</span>
+                        제품 타입
+                    </div>
+                    <div class="options" data-category="skincare-type">
+                        <div class="option" data-value="Skin"><input type="checkbox"> 스킨</div>
+                        <div class="option" data-value="lotion"><input type="checkbox"> 로션</div>
+                        <div class="option" data-value="cream"><input type="checkbox"> 크림</div>
+                        <div class="option" data-value="Ampoules"><input type="checkbox"> 앰플</div>
+                        <div class="option" data-value="Cleansing"><input type="checkbox"> 클렌징</div>
+                        <div class="option" data-value="moisturizing"><input type="checkbox"> 보습제</div>
+                        <div class="option" data-value="Essence"><input type="checkbox"> 에센스</div>
+                        <div class="option" data-value="pack"><input type="checkbox"> 팩</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">2</span>
+                        용량 (ml)
+                    </div>
+                    <div class="options" data-category="capacity">
+                        <div class="option" data-value="5 and under"><input type="checkbox"> 5ml 이하</div>
+                        <div class="option" data-value="6~10"><input type="checkbox"> 6~10ml</div>
+                        <div class="option" data-value="11~20"><input type="checkbox"> 11~20ml</div>
+                        <div class="option" data-value="21~30"><input type="checkbox"> 21~30ml</div>
+                        <div class="option" data-value="31~50"><input type="checkbox"> 31~50ml</div>
+                        <div class="option" data-value="51~100"><input type="checkbox"> 51~100ml</div>
+                        <div class="option" data-value="101~200"><input type="checkbox"> 101~200ml</div>
+                        <div class="option" data-value="201~300"><input type="checkbox"> 201~300ml</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">3</span>
+                        용기 형태
+                    </div>
+                    <div class="options" data-category="container-shape">
+                        <div class="option" data-value="regular"><input type="checkbox"> 일반형</div>
+                        <div class="option" data-value="dropper"><input type="checkbox"> 드로퍼</div>
+                        <div class="option" data-value="Roll-on"><input type="checkbox"> 롤온</div>
+                        <div class="option" data-value="pump"><input type="checkbox"> 펌프</div>
+                        <div class="option" data-value="Tube"><input type="checkbox"> 튜브</div>
+                        <div class="option" data-value="vacuum"><input type="checkbox"> 진공용기</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">4</span>
+                        용기 재질
+                    </div>
+                    <div class="options" data-category="container-material">
+                        <div class="option" data-value="plastic"><input type="checkbox"> 플라스틱</div>
+                        <div class="option" data-value="glass"><input type="checkbox"> 유리</div>
+                        <div class="option" data-value="metal"><input type="checkbox"> 금속</div>
+                        <div class="option" data-value="transparency"><input type="checkbox"> 투명</div>
+                        <div class="option" data-value="opacity"><input type="checkbox"> 불투명</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: 마케팅 & 판매 -->
+        <div class="step-section">
+            <div class="step-header">
+                STEP 3 - 마케팅 & 판매 전략
+                <button class="collapse-btn" onclick="toggleSection(this)">▼</button>
+            </div>
+            <div class="step-content">
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">1</span>
+                        판매 채널
+                    </div>
+                    <div class="options" data-category="retail">
+                        <div class="option" data-value="online"><input type="checkbox"> 온라인</div>
+                        <div class="option" data-value="SNS"><input type="checkbox"> SNS</div>
+                        <div class="option" data-value="Influencers"><input type="checkbox"> 인플루언서</div>
+                        <div class="option" data-value="Home Shopping"><input type="checkbox"> 홈쇼핑</div>
+                        <div class="option" data-value="Multishop"><input type="checkbox"> 멀티샵</div>
+                        <div class="option" data-value="Single Shop"><input type="checkbox"> 단독 매장</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">2</span>
+                        마케팅 방식
+                    </div>
+                    <div class="options" data-category="marketing">
+                        <div class="option" data-value="SNS"><input type="checkbox"> SNS</div>
+                        <div class="option" data-value="TV"><input type="checkbox"> TV</div>
+                        <div class="option" data-value="magazine"><input type="checkbox"> 잡지</div>
+                        <div class="option" data-value="Influencers"><input type="checkbox"> 인플루언서</div>
+                        <div class="option" data-value="online"><input type="checkbox"> 온라인</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">3</span>
+                        한국 시장 플랫폼
+                    </div>
+                    <div class="options" data-category="korea-market">
+                        <div class="option" data-value="Naver"><input type="checkbox"> 네이버</div>
+                        <div class="option" data-value="Coupang"><input type="checkbox"> 쿠팡</div>
+                        <div class="option" data-value="11th Street"><input type="checkbox"> 11번가</div>
+                        <div class="option" data-value="Gmarket"><input type="checkbox"> G마켓</div>
+                        <div class="option" data-value="Olive Young"><input type="checkbox"> 올리브영</div>
+                        <div class="option" data-value="Lotte"><input type="checkbox"> 롯데</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">4</span>
+                        사업 방식
+                    </div>
+                    <div class="options" data-category="business-type">
+                        <div class="option" data-value="ODM"><input type="checkbox"> ODM</div>
+                        <div class="option" data-value="OEM"><input type="checkbox"> OEM</div>
+                        <div class="option" data-value="Brand Distribution"><input type="checkbox"> 브랜드 유통</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: 성분 & 브랜딩 -->
+        <div class="step-section">
+            <div class="step-header">
+                STEP 4 - 성분 & 브랜딩
+                <button class="collapse-btn" onclick="toggleSection(this)">▼</button>
+            </div>
+            <div class="step-content">
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">1</span>
+                        주요 성분
+                    </div>
+                    <div class="options" data-category="ingredients">
+                        <div class="option" data-value="peptide"><input type="checkbox"> 펩타이드</div>
+                        <div class="option" data-value="Retinol"><input type="checkbox"> 레티놀</div>
+                        <div class="option" data-value="Stem Cells"><input type="checkbox"> 줄기세포</div>
+                        <div class="option" data-value="Ceramides"><input type="checkbox"> 세라마이드</div>
+                        <div class="option" data-value="Curcumin"><input type="checkbox"> 커큐민</div>
+                        <div class="option" data-value="Madecassoside"><input type="checkbox"> 마데카소사이드</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">2</span>
+                        수분 밀도
+                    </div>
+                    <div class="options" data-category="moisture">
+                        <div class="option" data-value="0.5"><input type="checkbox"> 0.5</div>
+                        <div class="option" data-value="0.55"><input type="checkbox"> 0.55</div>
+                        <div class="option" data-value="0.6"><input type="checkbox"> 0.6</div>
+                        <div class="option" data-value="0.65"><input type="checkbox"> 0.65</div>
+                        <div class="option" data-value="0.7"><input type="checkbox"> 0.7</div>
+                        <div class="option" data-value="0.75"><input type="checkbox"> 0.75</div>
+                        <div class="option" data-value="0.8"><input type="checkbox"> 0.8</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">3</span>
+                        특수 성분 요청
+                    </div>
+                    <div class="options" data-category="special-ingredients">
+                        <div class="option" data-value="yes"><input type="checkbox"> 있음</div>
+                        <div class="option" data-value="no"><input type="checkbox"> 없음</div>
+                    </div>
+                    <input type="text" class="special-input" placeholder="특수 성분이 있다면 구체적으로 입력해주세요" id="specialIngredientInput">
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">4</span>
+                        라벨 디자인
+                    </div>
+                    <div class="options" data-category="label">
+                        <div class="option" data-value="Design required"><input type="checkbox"> 디자인 필요</div>
+                        <div class="option" data-value="No design required"><input type="checkbox"> 디자인 불필요</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">5</span>
+                        브랜드 보유 여부
+                    </div>
+                    <div class="options" data-category="brand">
+                        <div class="option" data-value="Hold"><input type="checkbox"> 보유</div>
+                        <div class="option" data-value="Not Owned"><input type="checkbox"> 미보유</div>
+                    </div>
+                </div>
+
+                <div class="category">
+                    <div class="category-title">
+                        <span class="category-number">6</span>
+                        컨설팅 필요성
+                    </div>
+                    <div class="options" data-category="consulting">
+                        <div class="option" data-value="need"><input type="checkbox"> 필요</div>
+                        <div class="option" data-value="Unnecessary"><input type="checkbox"> 불필요</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 선택 사항 요약 -->
+        <div class="summary-section">
+            <h3 class="summary-title">📋 선택 사항 요약</h3>
+            <div class="selected-items" id="selectedItems">
+                <!-- 동적으로 생성될 선택 항목들 -->
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="exportData()">
+                    📄 결과 내보내기
+                </button>
+                <button class="btn btn-secondary" onclick="saveData()">
+                    💾 임시저장
+                </button>
+                <button class="btn btn-tertiary" onclick="loadData()">
+                    📂 불러오기
+                </button>
+                <button class="btn btn-primary" onclick="shareData()">
+                    📤 공유하기
+                </button>
+            </div>
+            
+            <div class="success-message" id="successMessage"></div>
+        </div>
+    </div>
+
+    <!-- 플로팅 저장 버튼 -->
+    <button class="floating-save" onclick="autoSave()">
+        💾 자동저장
+    </button>
+
+    <script>
+        // 전역 변수
+        const selectedData = {};
+        let deferredPrompt;
+        let autoSaveInterval;
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            updateProgress();
+            updateSummary();
+            loadAutoSave();
+            startAutoSave();
+            checkInstallPrompt();
+        });
+
+        // PWA 설치 프롬프트 체크
+        function checkInstallPrompt() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                document.getElementById('installPrompt').style.display = 'block';
+            });
+        }
+
+        // 앱 설치
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        showMessage('앱이 설치되었습니다!', 'success');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+
+        // 설치 프롬프트 무시
+        function dismissInstall() {
+            document.getElementById('installPrompt').style.display = 'none';
+        }
+
+        // 섹션 토글
+        function toggleSection(button) {
+            const content = button.parentElement.nextElementSibling;
+            const isCollapsed = content.classList.contains('collapsed');
+            
+            if (isCollapsed) {
+                content.classList.remove('collapsed');
+                button.classList.remove('collapsed');
+                button.textContent = '▼';
+            } else {
+                content.classList.add('collapsed');
+                button.classList.add('collapsed');
+                button.textContent = '▲';
+            }
+        }
+
+        // 이벤트 리스너 설정
+        function initializeEventListeners() {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const checkbox = this.querySelector('input[type="checkbox"]');
+                    const isChecked = !checkbox.checked;
+                    checkbox.checked = isChecked;
+                    
+                    if (isChecked) {
+                        this.classList.add('selected');
+                    } else {
+                        this.classList.remove('selected');
+                    }
+                    
+                    updateSelectedData();
+                    updateProgress();
+                    updateSummary();
+                });
+            });
+
+            // 특수 성분 입력 필드 이벤트
+            const specialInput = document.getElementById('specialIngredientInput');
+            if (specialInput) {
+                specialInput.addEventListener('input', function() {
+                    updateSelectedData();
+                    updateSummary();
+                });
+            }
+        }
+
+        // 선택된 데이터 업데이트
+        function updateSelectedData() {
+            const categories = document.querySelectorAll('.options');
+            
+            categories.forEach(categoryElement => {
+                const categoryName = categoryElement.getAttribute('data-category');
+                const selectedOptions = categoryElement.querySelectorAll('.option.selected');
+                
+                selectedData[categoryName] = [];
+                selectedOptions.forEach(option => {
+                    selectedData[categoryName].push(option.getAttribute('data-value'));
+                });
+            });
+
+            // 특수 성분 입력값 추가
+            const specialInput = document.getElementById('specialIngredientInput');
+            if (specialInput && specialInput.value.trim()) {
+                selectedData['special-ingredients-detail'] = [specialInput.value.trim()];
+            }
+        }
+
+        // 진행률 업데이트
+        function updateProgress() {
+            const totalCategories = document.querySelectorAll('.category').length;
+            const completedCategories = Object.keys(selectedData).filter(key => 
+                selectedData[key] && selectedData[key].length > 0
+            ).length;
+            
+            const progress = Math.min(Math.round((completedCategories / totalCategories) * 100), 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // 요약 섹션 업데이트
+        function updateSummary() {
+            const summaryContainer = document.getElementById('selectedItems');
+            summaryContainer.innerHTML = '';
+
+            const categoryNames = {
+                'products': '제품 종류',
+                'functional': '기능성',
+                'moq': '최소주문수량',
+                'certification': '인증 요구사항',
+                'region': '타겟 지역',
+                'demographic': '타겟 연령/성별',
+                'skincare-type': '스킨케어 타입',
+                'capacity': '용량',
+                'container-shape': '용기 형태',
+                'container-material': '용기 재질',
+                'retail': '판매 채널',
+                'marketing': '마케팅 방식',
+                'korea-market': '한국 시장 플랫폼',
+                'business-type': '사업 방식',
+                'ingredients': '주요 성분',
+                'moisture': '수분 밀도',
+                'special-ingredients': '특수 성분 요청',
+                'special-ingredients-detail': '특수 성분 상세',
+                'label': '라벨 디자인',
+                'brand': '브랜드 보유',
+                'consulting': '컨설팅 필요성'
+            };
+
+            Object.keys(selectedData).forEach(category => {
+                if (selectedData[category] && selectedData[category].length > 0) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'selected-category';
+                    
+                    const title = document.createElement('h4');
+                    title.textContent = categoryNames[category] || category;
+                    categoryDiv.appendChild(title);
+                    
+                    const list = document.createElement('ul');
+                    list.className = 'selected-list';
+                    
+                    selectedData[category].forEach(item => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = item;
+                        list.appendChild(listItem);
+                    });
+                    
+                    categoryDiv.appendChild(list);
+                    summaryContainer.appendChild(categoryDiv);
+                }
+            });
+
+            if (summaryContainer.children.length === 0) {
+                summaryContainer.innerHTML = '<p style="text-align: center; color: #666; font-style: italic;">아직 선택된 항목이 없습니다. 위의 체크리스트를 작성해주세요.</p>';
+            }
+        }
+
+        // 데이터 내보내기
+        function exportData() {
+            if (Object.keys(selectedData).length === 0) {
+                showMessage('먼저 체크리스트를 작성해주세요.', 'error');
+                return;
+            }
+
+            let exportText = '=== K-Beauty 전문 플랫폼 - 화장품 연구 결과 ===\n\n';
+            
+            const categoryNames = {
+                'products': '제품 종류',
+                'functional': '기능성',
+                'moq': '최소주문수량',
+                'certification': '인증 요구사항',
+                'region': '타겟 지역',
+                'demographic': '타겟 연령/성별',
+                'skincare-type': '스킨케어 타입',
+                'capacity': '용량',
+                'container-shape': '용기 형태',
+                'container-material': '용기 재질',
+                'retail': '판매 채널',
+                'marketing': '마케팅 방식',
+                'korea-market': '한국 시장 플랫폼',
+                'business-type': '사업 방식',
+                'ingredients': '주요 성분',
+                'moisture': '수분 밀도',
+                'special-ingredients': '특수 성분 요청',
+                'special-ingredients-detail': '특수 성분 상세',
+                'label': '라벨 디자인',
+                'brand': '브랜드 보유',
+                'consulting': '컨설팅 필요성'
+            };
+
+            Object.keys(selectedData).forEach(category => {
+                if (selectedData[category] && selectedData[category].length > 0) {
+                    exportText += `${categoryNames[category] || category}:\n`;
+                    selectedData[category].forEach(item => {
+                        exportText += `  - ${item}\n`;
+                    });
+                    exportText += '\n';
+                }
+            });
+
+            exportText += '\n생성일: ' + new Date().toLocaleString('ko-KR');
+
+            // 텍스트 파일로 다운로드
+            const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'K-Beauty_화장품연구결과_' + new Date().toISOString().slice(0, 10) + '.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            showMessage('체크리스트 결과가 다운로드되었습니다!', 'success');
+        }
+
+        // 데이터 저장
+        function saveData() {
+            const dataToSave = {
+                selectedData: selectedData,
+                timestamp: new Date().toISOString(),
+                specialIngredient: document.getElementById('specialIngredientInput').value
+            };
+            
+            try {
+                const jsonData = JSON.stringify(dataToSave, null, 2);
+                const blob = new Blob([jsonData], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'K-Beauty_저장데이터_' + new Date().toISOString().slice(0, 10) + '.json';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showMessage('데이터가 저장되었습니다!', 'success');
+            } catch (error) {
+                showMessage('저장 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // 데이터 불러오기
+        function loadData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const loadedData = JSON.parse(e.target.result);
+                            if (loadedData.selectedData) {
+                                // 기존 선택 초기화
+                                document.querySelectorAll('.option.selected').forEach(opt => {
+                                    opt.classList.remove('selected');
+                                    opt.querySelector('input').checked = false;
+                                });
+                                
+                                // 불러온 데이터 적용
+                                Object.keys(loadedData.selectedData).forEach(category => {
+                                    const categoryElement = document.querySelector(`[data-category="${category}"]`);
+                                    if (categoryElement) {
+                                        loadedData.selectedData[category].forEach(value => {
+                                            const option = categoryElement.querySelector(`[data-value="${value}"]`);
+                                            if (option) {
+                                                option.classList.add('selected');
+                                                option.querySelector('input').checked = true;
+                                            }
+                                        });
+                                    }
+                                });
+                                
+                                // 특수 성분 입력값 복원
+                                if (loadedData.specialIngredient) {
+                                    document.getElementById('specialIngredientInput').value = loadedData.specialIngredient;
+                                }
+                                
+                                updateSelectedData();
+                                updateProgress();
+                                updateSummary();
+                                showMessage('데이터를 불러왔습니다!', 'success');
+                            }
+                        } catch (error) {
+                            showMessage('파일을 읽는 중 오류가 발생했습니다.', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            input.click();
+        }
+
+        // 공유하기
+        function shareData() {
+            if (Object.keys(selectedData).length === 0) {
+                showMessage('먼저 체크리스트를 작성해주세요.', 'error');
+                return;
+            }
+
+            if (navigator.share) {
+                const shareText = generateShareText();
+                navigator.share({
+                    title: 'K-Beauty 화장품 연구 결과',
+                    text: shareText
+                }).then(() => {
+                    showMessage('공유가 완료되었습니다!', 'success');
+                }).catch(err => {
+                    fallbackShare();
+                });
+            } else {
+                fallbackShare();
+            }
+        }
+
+        // 대체 공유 방법
+        function fallbackShare() {
+            const shareText = generateShareText();
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showMessage('클립보드에 복사되었습니다!', 'success');
+                });
+            } else {
+                showMessage('공유 기능이 지원되지 않습니다.', 'error');
+            }
+        }
+
+        // 공유 텍스트 생성
+        function generateShareText() {
+            let shareText = 'K-Beauty 화장품 연구 결과\n\n';
+            const categoryNames = {
+                'products': '제품 종류',
+                'functional': '기능성',
+                'moq': '최소주문수량',
+                'certification': '인증 요구사항'
+            };
+
+            Object.keys(selectedData).slice(0, 4).forEach(category => {
+                if (selectedData[category] && selectedData[category].length > 0) {
+                    shareText += `${categoryNames[category] || category}: ${selectedData[category].join(', ')}\n`;
+                }
+            });
+
+            return shareText;
+        }
+
+        // 자동저장 시작
+        function startAutoSave() {
+            autoSaveInterval = setInterval(() => {
+                if (Object.keys(selectedData).length > 0) {
+                    const dataToSave = {
+                        selectedData: selectedData,
+                        timestamp: new Date().toISOString(),
+                        specialIngredient: document.getElementById('specialIngredientInput').value
+                    };
+                    
+                    // 메모리에 임시 저장
+                    window.tempSaveData = dataToSave;
+                }
+            }, 30000); // 30초마다 자동저장
+        }
+
+        // 자동저장 불러오기
+        function loadAutoSave() {
+            if (window.tempSaveData) {
+                const loadedData = window.tempSaveData;
+                if (loadedData.selectedData && Object.keys(loadedData.selectedData).length > 0) {
+                    if (confirm('이전에 작성하던 내용이 있습니다. 불러오시겠습니까?')) {
+                        // 불러온 데이터 적용 로직 (loadData와 동일)
+                        Object.keys(loadedData.selectedData).forEach(category => {
+                            const categoryElement = document.querySelector(`[data-category="${category}"]`);
+                            if (categoryElement) {
+                                loadedData.selectedData[category].forEach(value => {
+                                    const option = categoryElement.querySelector(`[data-value="${value}"]`);
+                                    if (option) {
+                                        option.classList.add('selected');
+                                        option.querySelector('input').checked = true;
+                                    }
+                                });
+                            }
+                        });
+                        
+                        if (loadedData.specialIngredient) {
+                            document.getElementById('specialIngredientInput').value = loadedData.specialIngredient;
+                        }
+                        
+                        updateSelectedData();
+                        updateProgress();
+                        updateSummary();
+                    }
+                }
+            }
+        }
+
+        // 수동 자동저장
+        function autoSave() {
+            if (Object.keys(selectedData).length > 0) {
+                const dataToSave = {
+                    selectedData: selectedData,
+                    timestamp: new Date().toISOString(),
+                    specialIngredient: document.getElementById('specialIngredientInput').value
+                };
+                
+                window.tempSaveData = dataToSave;
+                showMessage('자동저장이 완료되었습니다!', 'success');
+            } else {
+                showMessage('저장할 데이터가 없습니다.', 'error');
+            }
+        }
+
+        // 메시지 표시
+        function showMessage(text, type = 'success') {
+            const messageElement = document.getElementById('successMessage');
+            messageElement.textContent = text;
+            messageElement.className = `success-message ${type === 'success' ? '' : 'error'} show`;
+            
+            setTimeout(() => {
+                messageElement.classList.remove('show');
+            }, 3000);
+        }
+
+        // 페이지 종료 전 경고
+        window.addEventListener('beforeunload', function(e) {
+            if (Object.keys(selectedData).length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    </script>
 </body>
 </html>
