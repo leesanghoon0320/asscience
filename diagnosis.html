@@ -1,11 +1,762 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>사상체질 설문</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사상체질 건강·피부 진단 - 나만의 맞춤 건강 가이드</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    text-align: center;
+    padding: 40px 0 30px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.header p {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.progress-container {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    text-align: center;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.question-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.question-card.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-number {
+    display: inline-block;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.question-text {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-weight: 500;
+}
+
+.answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.answer-option {
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    padding: 15px 20px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.answer-option:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+.answer-option.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+}
+
+.answer-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.answer-option label {
+    cursor: pointer;
+    display: block;
+    font-size: 1rem;
+}
+
+.navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    gap: 15px;
+}
+
+.nav-btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.prev-btn {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.prev-btn:hover {
+    background: #dee2e6;
+}
+
+.next-btn, .submit-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex: 1;
+}
+
+.next-btn:hover, .submit-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.next-btn:disabled, .submit-btn:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.next-btn:disabled:hover, .submit-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.result-container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.result-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.result-title {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.constitution-name {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.result-chart {
+    margin: 40px 0;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 15px;
+}
+
+.chart-title {
+    text-align: center;
+    color: #495057;
+    margin-bottom: 20px;
+    font-size: 1.1rem;
+}
+
+.chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.chart-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.chart-label {
+    width: 80px;
+    text-align: right;
+    font-weight: 600;
+    color: #495057;
+}
+
+.chart-bar-container {
+    flex: 1;
+    height: 30px;
+    background: #e9ecef;
+    border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-bar {
+    height: 100%;
+    border-radius: 15px;
+    transition: width 1s ease;
+    position: relative;
+}
+
+.chart-bar.te { background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%); }
+.chart-bar.sy { background: linear-gradient(90deg, #fa709a 0%, #fee140 100%); }
+.chart-bar.se { background: linear-gradient(90deg, #30cfd0 0%, #330867 100%); }
+.chart-bar.ty { background: linear-gradient(90deg, #a8edea 0%, #fed6e3 100%); }
+
+.chart-value {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.result-section {
+    margin: 30px 0;
+}
+
+.result-section h3 {
+    color: #2c3e50;
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.result-section p {
+    color: #495057;
+    line-height: 1.8;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    white-space: pre-wrap;
+}
+
+.disclaimer {
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff3cd;
+    border-radius: 12px;
+    border: 1px solid #ffeaa7;
+}
+
+.restart-btn {
+    display: block;
+    margin: 30px auto 0;
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.restart-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .question-card {
+        padding: 20px;
+    }
+    
+    .navigation {
+        flex-direction: column;
+    }
+    
+    .chart-label {
+        width: 60px;
+        font-size: 0.9rem;
+    }
+}
+</style>
 </head>
 <body>
-  <h1>사상체질 설문지 (샘플)</h1>
-  <p>설문지는 이곳에 구성됩니다...</p>
+<div class="container">
+    <div class="header">
+        <h1>사상체질 건강·피부 진단</h1>
+        <p>60개의 질문으로 알아보는 나만의 체질과 맞춤 건강 가이드</p>
+    </div>
+
+    <div class="progress-container" id="progressContainer">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 / 60 문항</div>
+    </div>
+
+    <div id="surveySection">
+        <div id="questionsContainer"></div>
+        
+        <div class="navigation">
+            <button type="button" class="nav-btn prev-btn" id="prevBtn" style="display: none;">이전</button>
+            <button type="button" class="nav-btn next-btn" id="nextBtn" disabled>다음</button>
+            <button type="button" class="nav-btn submit-btn" id="submitBtn" style="display: none;" disabled>결과 확인</button>
+        </div>
+    </div>
+
+    <div class="result-container" id="resultContainer">
+        <div class="result-header">
+            <h2 class="result-title">당신의 체질은</h2>
+            <div class="constitution-name" id="constitutionName"></div>
+        </div>
+
+        <div class="result-chart">
+            <h3 class="chart-title">체질별 점수 분석</h3>
+            <div class="chart-bars" id="chartBars"></div>
+        </div>
+
+        <div class="result-section">
+            <h3>🏥 건강 가이드</h3>
+            <p id="healthGuide"></p>
+        </div>
+
+        <div class="result-section">
+            <h3>✨ 피부 관리 팁</h3>
+            <p id="skinGuide"></p>
+        </div>
+
+        <div class="result-section">
+            <h3>💄 추천 화장품 성분</h3>
+            <p id="cosmeticsGuide"></p>
+        </div>
+
+        <div class="disclaimer">
+            ⚠️ 본 결과는 자가 설문을 기반으로 한 참고용 정보입니다.<br>
+            정확한 진단을 위해서는 전문 한의사의 상담을 받으시기 바랍니다.
+        </div>
+
+        <button type="button" class="restart-btn" onclick="location.reload()">다시 진단하기</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+    {"text": "나는 다른 사람보다 체중이 쉽게 증가한다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 식욕이 강하고 한 끼 식사량이 많은 편이다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 땀이 많고 쉽게 더위를 탄다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 얼굴이 둥글고 목과 어깨가 두꺼운 편이다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 추위보다 더위에 약하다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 배부터 살이 찌는 경향이 있다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 음식을 빨리 먹는 습관이 있다.", "weights": {"TE": 1, "SY": 2, "SE": 0, "TY": 1}},
+    {"text": "나는 맥박이 느린 편이다.", "weights": {"TE": 1, "SY": 0, "SE": 2, "TY": 0}},
+    {"text": "나는 아침에 일어나도 몸이 무겁다.", "weights": {"TE": 2, "SY": 0, "SE": 1, "TY": 1}},
+    {"text": "나는 음주 후 얼굴이 잘 붉어진다.", "weights": {"TE": 1, "SY": 2, "SE": 0, "TY": 1}},
+    {"text": "나는 활발하고 사교적인 성격이다.", "weights": {"SY": 2, "TY": 1, "TE": 1, "SE": 0}},
+    {"text": "나는 새로운 일을 시도하는 것을 좋아한다.", "weights": {"SY": 2, "TY": 1, "TE": 1, "SE": 0}},
+    {"text": "나는 감정보다 이성을 우선시한다.", "weights": {"TE": 2, "SY": 1, "SE": 1, "TY": 0}},
+    {"text": "나는 남의 부탁을 거절하기 어렵다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 계획대로 일이 진행되지 않으면 스트레스를 받는다.", "weights": {"SE": 2, "TE": 1, "SY": 1, "TY": 0}},
+    {"text": "나는 리더 역할보다는 지원 역할이 편하다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 감정 표현이 직설적이다.", "weights": {"SY": 2, "TY": 1, "TE": 1, "SE": 0}},
+    {"text": "나는 세부적인 것까지 신경 쓰는 편이다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 짜증을 잘 내지 않는 편이다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 새로운 사람을 만나는 것이 즐겁다.", "weights": {"SY": 2, "TY": 1, "TE": 1, "SE": 0}},
+    {"text": "나는 소화불량이나 속 더부룩함을 자주 경험한다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 가슴이 답답하거나 숨이 차는 느낌이 있다.", "weights": {"TE": 2, "TY": 1, "SY": 1, "SE": 0}},
+    {"text": "나는 수면 시간이 길어도 피곤하다.", "weights": {"TE": 2, "SE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 변비가 자주 있다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 식사 후 졸음이 쏟아진다.", "weights": {"TE": 2, "SY": 1, "SE": 1, "TY": 0}},
+    {"text": "나는 몸이 자주 붓는다.", "weights": {"TE": 2, "SE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 두통이 잦다.", "weights": {"SE": 2, "SY": 1, "TE": 1, "TY": 0}},
+    {"text": "나는 손발이 차갑다.", "weights": {"SE": 2, "TE": 0, "SY": 0, "TY": 1}},
+    {"text": "나는 알레르기나 비염 증상이 있다.", "weights": {"SE": 2, "SY": 1, "TE": 1, "TY": 0}},
+    {"text": "나는 아침에 기침이나 가래가 있다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 피부가 두껍고 모공이 넓다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 피부가 쉽게 번들거린다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 여드름이나 트러블이 잘 생긴다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 피부가 건조하고 각질이 잘 일어난다.", "weights": {"SE": 2, "SY": 1, "TE": 0, "TY": 1}},
+    {"text": "나는 홍조나 붉은 기가 쉽게 올라온다.", "weights": {"SY": 2, "SE": 1, "TE": 0, "TY": 1}},
+    {"text": "나는 탄력이 부족하고 잔주름이 신경 쓰인다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 땀이 나면 피부가 끈적거린다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 T존이 특히 번들거린다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 복합성 피부라고 느낀다.", "weights": {"SY": 2, "TE": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 민감성 피부라고 느낀다.", "weights": {"SE": 2, "SY": 1, "TE": 0, "TY": 1}},
+    {"text": "나는 야식이나 간식을 자주 먹는다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 규칙적인 운동을 하지 않는다.", "weights": {"TE": 2, "SE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 스트레스를 먹는 것으로 푼다.", "weights": {"TE": 2, "SY": 1, "SE": 1, "TY": 0}},
+    {"text": "나는 카페인을 자주 섭취한다.", "weights": {"SY": 2, "TE": 1, "SE": 1, "TY": 0}},
+    {"text": "나는 수분 섭취가 부족한 편이다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 늦게 잠들고 늦게 일어난다.", "weights": {"SY": 2, "TE": 1, "SE": 1, "TY": 0}},
+    {"text": "나는 술자리를 자주 갖는다.", "weights": {"SY": 2, "TE": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 체중 관리를 위해 다이어트를 반복한다.", "weights": {"SE": 2, "TE": 1, "SY": 1, "TY": 0}},
+    {"text": "나는 앉아서 일하는 시간이 길다.", "weights": {"TE": 2, "SE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 심한 운동 후 쉽게 지친다.", "weights": {"SE": 2, "TE": 1, "SY": 1, "TY": 0}},
+    {"text": "나는 목소리가 굵고 크다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 입이 자주 마른다.", "weights": {"SE": 2, "TE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 어깨와 목이 자주 결린다.", "weights": {"TE": 2, "SE": 1, "SY": 0, "TY": 1}},
+    {"text": "나는 기름진 음식을 좋아한다.", "weights": {"TE": 2, "SY": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 몸에 열이 많아 잠을 설치는 편이다.", "weights": {"TE": 2, "SY": 1, "TY": 1, "SE": 0}},
+    {"text": "나는 찬 음식이나 음료를 좋아한다.", "weights": {"SY": 2, "TE": 1, "SE": 0, "TY": 1}},
+    {"text": "나는 가만히 있기보다 움직이는 것을 좋아한다.", "weights": {"SY": 2, "TY": 1, "TE": 1, "SE": 0}},
+    {"text": "나는 외모에 관심이 많다.", "weights": {"SY": 2, "TY": 1, "TE": 1, "SE": 0}},
+    {"text": "나는 음식을 천천히 씹어 먹는다.", "weights": {"SE": 2, "TY": 1, "SY": 0, "TE": 1}},
+    {"text": "나는 주변 온도 변화에 예민하다.", "weights": {"SE": 2, "SY": 1, "TE": 0, "TY": 1}}
+];
+
+const advice = {
+    "TE": {
+        "title": "태음인 (Tae-Eum)",
+        "health": "태음인은 체질적으로 습하고 열이 많아 체중 관리가 중요합니다. 간과 폐 기능을 강화하는 것이 핵심이며, 중강도의 꾸준한 유산소 운동(주 3-4회, 30분 이상)을 추천합니다. 식사는 채소와 식이섬유를 중심으로 하되, 과식을 피하고 천천히 드세요. 사우나나 반신욕으로 땀을 내는 것도 도움이 됩니다.",
+        "skin": "태음인은 피지 분비가 많고 모공이 넓어 철저한 클렌징이 필수입니다. 아침저녁으로 젤 타입이나 폼 클렌저로 깨끗이 세안하고, BHA 성분의 각질 제거제를 주 2-3회 사용하세요. 주 1회 클레이 마스크로 모공을 관리하고, 가벼운 수분 크림이나 젤 타입 보습제를 사용하여 유수분 밸런스를 맞춰주세요.",
+        "cosmetics": "🧪 추천 화장품 성분:\n• BHA (살리실산): 모공 속 피지와 각질 제거\n• 나이아신아마이드: 피지 조절, 모공 축소\n• 티트리 오일: 항균 작용으로 트러블 예방\n• 그린티 추출물: 항산화 및 피지 조절\n• 아연(Zinc PCA): 피지 분비 억제\n• 카올린/벤토나이트: 클레이 마스크 주성분\n• 위치하젤: 모공 수렴 효과"
+    },
+    "SY": {
+        "title": "소양인 (So-Yang)",
+        "health": "소양인은 열이 많고 성격이 급해 심혈관 건강에 주의해야 합니다. 스트레스 관리가 특히 중요하며, 요가나 명상 같은 정적인 운동을 병행하세요. 충분한 수면(7-8시간)과 규칙적인 생활 리듬을 유지하고, 맵고 자극적인 음식은 피하면서 수분을 충분히 섭취하세요. 감정 조절을 위한 호흡법도 도움이 됩니다.",
+        "skin": "소양인은 복합성 피부가 많아 T존과 U존을 구분해서 관리해야 합니다. 약산성 클렌저로 세안하고, 알코올이 없는 토너로 pH 밸런스를 맞춰주세요. T존에는 가벼운 세럼을, U존에는 보습 크림을 사용하는 멀티 마스킹을 추천합니다. 자외선 차단제는 필수이며, 진정 성분이 포함된 제품을 선택하세요.",
+        "cosmetics": "🧪 추천 화장품 성분:\n• 알로에베라: 열을 식히고 진정 효과\n• 카모마일: 예민한 피부 진정\n• 히알루론산: 가벼운 수분 공급\n• 비타민 B5 (판테놀): 진정 및 재생\n• 감초 추출물: 항염 및 미백 효과\n• 녹차 추출물: 항산화 및 진정\n• 스쿠알란: 가벼운 보습"
+    },
+    "SE": {
+        "title": "소음인 (So-Eum)",
+        "health": "소음인은 소화기가 약하고 체온이 낮아 몸을 따뜻하게 유지하는 것이 중요합니다. 따뜻한 음식을 규칙적으로 소량씩 자주 드시고, 생강차나 대추차 같은 따뜻한 차를 즐기세요. 과격한 운동보다는 걷기, 스트레칭 같은 가벼운 운동이 적합합니다. 충분한 휴식과 함께 복부를 따뜻하게 하는 찜질도 좋습니다.",
+        "skin": "소음인은 건조하고 민감한 피부가 많아 보습과 진정이 핵심입니다. 세라마이드, 히알루론산이 풍부한 보습제를 사용하고, 약산성 저자극 클렌저를 선택하세요. 각질 제거는 최소화하고, 센텔라, 병풀 추출물 같은 진정 성분을 활용하세요. 미스트를 자주 뿌려 수분을 보충하고, 보습 팩을 주 2-3회 사용하세요.",
+        "cosmetics": "🧪 추천 화장품 성분:\n• 세라마이드: 피부 장벽 강화\n• 콜레스테롤: 피부 보호막 복구\n• 시어버터: 깊은 보습과 영양\n• 병풀 추출물(센텔라): 진정 및 재생\n• 마데카소사이드: 민감성 케어\n• 글리세린: 수분 끌어당김\n• 스쿠알란: 피부 친화적 오일"
+    },
+    "TY": {
+        "title": "태양인 (Tae-Yang)",
+        "health": "태양인은 상체에 열이 많고 하체가 약해 균형을 맞추는 것이 중요합니다. 하체 운동을 강화하고, 명상이나 호흡 운동으로 마음을 안정시키세요. 과도한 음주와 짠 음식은 피하고, 신선한 과일과 채소를 충분히 섭취하세요. 규칙적인 생활 습관을 유지하고, 충분한 수면을 통해 간 기능을 보호하세요.",
+        "skin": "태양인은 열이 많아 홍조와 트러블이 생기기 쉽습니다. 쿨링 효과가 있는 제품을 사용하고, 항산화 성분(비타민 C, E)이 풍부한 세럼을 활용하세요. 자극적인 스크럽은 피하고, 진정 마스크를 주 1-2회 사용하세요. 가벼운 수분 크림으로 마무리하고, 민감한 날에는 시카 크림으로 진정시켜 주세요.",
+        "cosmetics": "🧪 추천 화장품 성분:\n• 비타민 C: 항산화 및 미백\n• 비타민 E: 항산화 보호\n• 아줄렌: 강력한 진정 효과\n• 멘톨/페퍼민트: 쿨링 효과\n• 캘러민: 열 진정 및 수렴\n• 프로폴리스: 항균 및 재생\n• 호호바 오일: 가벼운 보습"
+    }
+};
+
+let currentQuestion = 0;
+const answers = {};
+
+function createQuestionCard(index) {
+    const q = questions[index];
+    return `
+        <div class="question-card ${index === 0 ? 'active' : ''}" data-question="${index}">
+            <span class="question-number">문항 ${index + 1}</span>
+            <h2 class="question-text">${q.text}</h2>
+            <div class="answer-options">
+                <div class="answer-option" onclick="selectAnswer(${index}, 2, this)">
+                    <input type="radio" name="q${index}" value="2" id="q${index}_2">
+                    <label for="q${index}_2">항상 그렇다</label>
+                </div>
+                <div class="answer-option" onclick="selectAnswer(${index}, 1, this)">
+                    <input type="radio" name="q${index}" value="1" id="q${index}_1">
+                    <label for="q${index}_1">가끔 그렇다</label>
+                </div>
+                <div class="answer-option" onclick="selectAnswer(${index}, 0, this)">
+                    <input type="radio" name="q${index}" value="0" id="q${index}_0">
+                    <label for="q${index}_0">아니다</label>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function selectAnswer(questionIndex, value, element) {
+    answers[questionIndex] = value;
+    
+    // 선택된 옵션 스타일 적용
+    const options = element.parentNode.querySelectorAll('.answer-option');
+    options.forEach(opt => opt.classList.remove('selected'));
+    element.classList.add('selected');
+    
+    // 라디오 버튼 체크
+    element.querySelector('input').checked = true;
+    
+    // 다음 버튼 활성화
+    if (questionIndex === questions.length - 1) {
+        // 마지막 문항인 경우 제출 버튼 활성화
+        document.getElementById('submitBtn').disabled = false;
+    } else {
+        document.getElementById('nextBtn').disabled = false;
+    }
+    
+    // 진행률 업데이트
+    updateProgress();
+}
+
+function updateProgress() {
+    const answeredCount = Object.keys(answers).length;
+    const percentage = (answeredCount / questions.length) * 100;
+    
+    document.getElementById('progressFill').style.width = percentage + '%';
+    document.getElementById('progressText').textContent = `${answeredCount} / ${questions.length} 문항`;
+}
+
+function showQuestion(index) {
+    const cards = document.querySelectorAll('.question-card');
+    cards.forEach(card => card.classList.remove('active'));
+    
+    setTimeout(() => {
+        cards[index].classList.add('active');
+    }, 100);
+    
+    // 버튼 상태 업데이트
+    document.getElementById('prevBtn').style.display = index === 0 ? 'none' : 'block';
+    document.getElementById('nextBtn').style.display = index === questions.length - 1 ? 'none' : 'block';
+    document.getElementById('submitBtn').style.display = index === questions.length - 1 ? 'block' : 'none';
+    
+    // 다음 버튼 비활성화 (답변하지 않은 경우)
+    if (!answers.hasOwnProperty(index)) {
+        document.getElementById('nextBtn').disabled = true;
+        // 마지막 문항에서는 제출 버튼도 비활성화
+        if (index === questions.length - 1) {
+            document.getElementById('submitBtn').disabled = true;
+        }
+    } else {
+        document.getElementById('nextBtn').disabled = false;
+        // 마지막 문항에서는 제출 버튼 활성화
+        if (index === questions.length - 1) {
+            document.getElementById('submitBtn').disabled = false;
+        }
+    }
+}
+
+function calculateResult() {
+    const scores = {TE: 0, SY: 0, SE: 0, TY: 0};
+    
+    questions.forEach((q, idx) => {
+        const answer = answers[idx] !== undefined ? answers[idx] : 0;
+        for (const key in scores) {
+            scores[key] += q.weights[key] * answer;
+        }
+    });
+    
+    console.log('최종 점수:', scores);
+    
+    // 최고 점수 체질 찾기
+    const constitution = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+    
+    // 점수를 백분율로 변환
+    const maxPossibleScore = questions.length * 2 * 2; // 최대 가능 점수
+    const percentages = {};
+    for (const key in scores) {
+        percentages[key] = Math.round((scores[key] / maxPossibleScore) * 100);
+    }
+    
+    console.log('체질:', constitution, '백분율:', percentages);
+    
+    return { constitution, percentages };
+}
+
+function showResult(constitution, percentages) {
+    const result = advice[constitution];
+    
+    document.getElementById('constitutionName').textContent = result.title;
+    document.getElementById('healthGuide').textContent = result.health;
+    document.getElementById('skinGuide').textContent = result.skin;
+    document.getElementById('cosmeticsGuide').textContent = result.cosmetics;
+    
+    // 차트 생성
+    const chartHTML = `
+        <div class="chart-item">
+            <span class="chart-label">태음인</span>
+            <div class="chart-bar-container">
+                <div class="chart-bar te" style="width: 0%">
+                    <span class="chart-value">${percentages.TE}%</span>
+                </div>
+            </div>
+        </div>
+        <div class="chart-item">
+            <span class="chart-label">소양인</span>
+            <div class="chart-bar-container">
+                <div class="chart-bar sy" style="width: 0%">
+                    <span class="chart-value">${percentages.SY}%</span>
+                </div>
+            </div>
+        </div>
+        <div class="chart-item">
+            <span class="chart-label">소음인</span>
+            <div class="chart-bar-container">
+                <div class="chart-bar se" style="width: 0%">
+                    <span class="chart-value">${percentages.SE}%</span>
+                </div>
+            </div>
+        </div>
+        <div class="chart-item">
+            <span class="chart-label">태양인</span>
+            <div class="chart-bar-container">
+                <div class="chart-bar ty" style="width: 0%">
+                    <span class="chart-value">${percentages.TY}%</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('chartBars').innerHTML = chartHTML;
+    
+    // 숨기기/보이기
+    document.getElementById('surveySection').style.display = 'none';
+    document.getElementById('progressContainer').style.display = 'none';
+    document.getElementById('resultContainer').style.display = 'block';
+    
+    // 차트 애니메이션
+    setTimeout(() => {
+        document.querySelector('.chart-bar.te').style.width = percentages.TE + '%';
+        document.querySelector('.chart-bar.sy').style.width = percentages.SY + '%';
+        document.querySelector('.chart-bar.se').style.width = percentages.SE + '%';
+        document.querySelector('.chart-bar.ty').style.width = percentages.TY + '%';
+    }, 100);
+}
+
+function handleSubmit() {
+    console.log('결과 확인 버튼 클릭됨');
+    console.log('답변된 문항 수:', Object.keys(answers).length);
+    console.log('전체 문항 수:', questions.length);
+    
+    // 모든 문항이 답변되었는지 확인
+    const unansweredQuestions = [];
+    for(let i = 0; i < questions.length; i++) {
+        if (!answers.hasOwnProperty(i)) {
+            unansweredQuestions.push(i + 1);
+        }
+    }
+    
+    if (unansweredQuestions.length > 0) {
+        console.log('미답변 문항:', unansweredQuestions);
+        if (confirm(`아직 ${unansweredQuestions.length}개의 문항에 답변하지 않았습니다.\n그래도 결과를 확인하시겠습니까?`)) {
+            // 미답변 문항은 0점으로 처리
+            for(let i = 0; i < questions.length; i++) {
+                if (!answers.hasOwnProperty(i)) {
+                    answers[i] = 0;
+                }
+            }
+        } else {
+            return;
+        }
+    }
+    
+    try {
+        const { constitution, percentages } = calculateResult();
+        console.log('계산 완료:', constitution, percentages);
+        showResult(constitution, percentages);
+    } catch (error) {
+        console.error('결과 계산 중 오류:', error);
+        alert('결과 계산 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
+}
+
+// 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('앱 초기화 시작');
+    
+    // 모든 질문 카드 생성
+    const container = document.getElementById('questionsContainer');
+    questions.forEach((q, idx) => {
+        container.innerHTML += createQuestionCard(idx);
+    });
+    
+    // 이벤트 리스너
+    document.getElementById('prevBtn').addEventListener('click', () => {
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            showQuestion(currentQuestion);
+        }
+    });
+    
+    document.getElementById('nextBtn').addEventListener('click', () => {
+        if (currentQuestion < questions.length - 1) {
+            currentQuestion++;
+            showQuestion(currentQuestion);
+        }
+    });
+    
+    // 제출 버튼 클릭 이벤트
+    document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+    
+    console.log('앱 초기화 완료');
+});
+</script>
 </body>
 </html>
